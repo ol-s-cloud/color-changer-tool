@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG Color Changer Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>PNG Color Changer Tool</h1>
+        <p>Upload your PNG image and change its colors instantly!</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <p>📁 Drag & drop your PNG file here or click to select</p>
+            <input type="file" id="fileInput" accept="image/png,image/svg+xml" style="display: none;">
+        </div>
+
+        <div class="preset-buttons">
+            <strong>Quick Presets:</strong><br>
+            <button onclick="setColors('#FFFFFF', '#13493f')">White & Dark Blue-Green</button>
+            <button onclick="setColors('#000000', '#FFFFFF')">Black & White</button>
+            <button onclick="setColors('#13493f', '#FFFFFF')">Dark Blue-Green & White</button>
+        </div>
+
+        <div class="color-controls">
+            <div class="color-group">
+                <label>From Color (Original):</label>
+                <input type="color" id="fromColor" value="#000000">
+                <input type="text" id="fromColorHex" value="#000000">
+            </div>
+            <div class="color-group">
+                <label>To Color (New):</label>
+                <input type="color" id="toColor" value="#13493f">
+                <input type="text" id="toColorHex" value="#13493f">
+            </div>
+        </div>
+
+        <button onclick="processImage()">🎨 Change Colors</button>
+        <button onclick="resetImage()">🔄 Reset to Original</button>
+
+        <div class="canvas-container">
+            <div class="canvas-wrapper">
+                <h3>Original</h3>
+                <canvas id="originalCanvas"></canvas>
+            </div>
+            <div class="canvas-wrapper">
+                <h3>Modified</h3>
+                <canvas id="modifiedCanvas"></canvas>
+            </div>
+        </div>
+
+        <a id="downloadLink" style="display: none;">💾 Download Modified Image</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
