@@ -1,58 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PNG Color Changer Tool</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Recolor PNG images and logos instantly in your browser. Free, private, no uploads, no sign-up.">
+  <meta name="theme-color" content="#0b0f0e">
+  <meta property="og:title" content="Recolor — Free PNG & Logo Color Changer">
+  <meta property="og:description" content="Change image and logo colors instantly. 100% browser-based, private and free.">
+  <meta property="og:type" content="website">
+  <title>Recolor — Free PNG & Logo Color Changer</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>PNG Color Changer Tool</h1>
-        <p>Upload your PNG image and change its colors instantly!</p>
-        
-        <div class="upload-area" id="uploadArea">
-            <p>📁 Drag & drop your PNG file here or click to select</p>
-            <input type="file" id="fileInput" accept="image/png,image/svg+xml" style="display: none;">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Recolor home">
+      <span class="brand-mark"></span>
+      <span>Recolor</span>
+    </a>
+    <nav class="header-actions" aria-label="Primary navigation">
+      <a href="#how-it-works">How it works</a>
+      <a href="https://github.com/ol-s-cloud/color-changer-tool" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">FREE · PRIVATE · NO SIGN-UP</div>
+      <h1>Change any PNG color<br><span>in seconds.</span></h1>
+      <p class="hero-copy">Upload an image, pick the color you want to replace, choose a new one and download. Your image never leaves your device.</p>
+      <div class="trust-row">
+        <span>✓ 100% free</span>
+        <span>✓ No uploads</span>
+        <span>✓ Instant download</span>
+        <span>✓ Open source</span>
+      </div>
+    </section>
+
+    <section class="app-shell" aria-label="Image recoloring tool">
+      <div class="upload-area" id="uploadArea" role="button" tabindex="0" aria-label="Upload image">
+        <div class="upload-icon">↥</div>
+        <div>
+          <strong>Drop your image here</strong>
+          <span>PNG, JPG or WebP · or click to choose</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
+      </div>
+
+      <div class="workspace" id="workspace" hidden>
+        <div class="file-bar">
+          <div>
+            <strong id="fileName">image.png</strong>
+            <span id="fileMeta"></span>
+          </div>
+          <button class="text-button" id="replaceImageButton" type="button">Replace image</button>
         </div>
 
-        <div class="preset-buttons">
-            <strong>Quick Presets:</strong><br>
-            <button onclick="setColors('#FFFFFF', '#13493f')">White & Dark Blue-Green</button>
-            <button onclick="setColors('#000000', '#FFFFFF')">Black & White</button>
-            <button onclick="setColors('#13493f', '#FFFFFF')">Dark Blue-Green & White</button>
+        <div class="editor-grid">
+          <aside class="controls-panel">
+            <div class="step-label">1 · PICK ORIGINAL COLOR</div>
+            <div class="color-field">
+              <input type="color" id="fromColor" value="#000000" aria-label="Original color">
+              <input type="text" id="fromColorHex" value="#000000" maxlength="7" aria-label="Original color hex">
+            </div>
+            <button class="secondary-button" id="sampleModeButton" type="button">Pick from image</button>
+            <p class="microcopy" id="sampleHint">Tip: click “Pick from image”, then click any pixel in the original.</p>
+
+            <div class="detected-wrap" id="detectedWrap" hidden>
+              <div class="field-label">Detected colors</div>
+              <div class="detected-colors" id="detectedColors"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="step-label">2 · CHOOSE NEW COLOR</div>
+            <div class="color-field">
+              <input type="color" id="toColor" value="#13493f" aria-label="New color">
+              <input type="text" id="toColorHex" value="#13493f" maxlength="7" aria-label="New color hex">
+            </div>
+
+            <div class="field-row">
+              <label for="tolerance">Match tolerance <span id="toleranceValue">50</span></label>
+              <input type="range" id="tolerance" min="0" max="120" value="50">
+              <div class="range-labels"><span>Exact</span><span>Broad</span></div>
+            </div>
+
+            <div class="preset-row" aria-label="Quick presets">
+              <button class="preset" type="button" data-from="#000000" data-to="#FFFFFF">Black → White</button>
+              <button class="preset" type="button" data-from="#FFFFFF" data-to="#000000">White → Black</button>
+              <button class="preset" type="button" data-from="#000000" data-to="#13493f">Black → Green</button>
+            </div>
+
+            <button class="primary-button" id="changeButton" type="button">Change color</button>
+            <button class="secondary-button" id="resetButton" type="button">Reset image</button>
+            <a class="download-button" id="downloadLink" hidden>Download PNG ↓</a>
+          </aside>
+
+          <div class="preview-panel">
+            <div class="preview-head">
+              <div>
+                <span class="preview-label">ORIGINAL</span>
+                <span class="sample-state" id="sampleState"></span>
+              </div>
+              <span class="preview-label">RESULT</span>
+            </div>
+            <div class="canvas-grid">
+              <div class="canvas-card"><canvas id="originalCanvas" title="Original image"></canvas></div>
+              <div class="canvas-card"><canvas id="modifiedCanvas" title="Modified image"></canvas></div>
+            </div>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <div class="color-controls">
-            <div class="color-group">
-                <label>From Color (Original):</label>
-                <input type="color" id="fromColor" value="#000000">
-                <input type="text" id="fromColorHex" value="#000000">
-            </div>
-            <div class="color-group">
-                <label>To Color (New):</label>
-                <input type="color" id="toColor" value="#13493f">
-                <input type="text" id="toColorHex" value="#13493f">
-            </div>
-        </div>
+    <section class="how-it-works" id="how-it-works">
+      <div class="section-heading">
+        <div class="eyebrow">HOW IT WORKS</div>
+        <h2>Three steps. Nothing uploaded.</h2>
+      </div>
+      <div class="steps">
+        <article><span>01</span><h3>Upload</h3><p>Choose a PNG, JPG or WebP from your device.</p></article>
+        <article><span>02</span><h3>Recolor</h3><p>Pick a source color and replace it with any color you want.</p></article>
+        <article><span>03</span><h3>Download</h3><p>Export the edited image instantly as a PNG.</p></article>
+      </div>
+    </section>
 
-        <button onclick="processImage()">🎨 Change Colors</button>
-        <button onclick="resetImage()">🔄 Reset to Original</button>
+    <section class="privacy-card">
+      <div class="privacy-icon">◎</div>
+      <div>
+        <h2>Your images stay yours.</h2>
+        <p>Recolor works entirely inside your browser using the Canvas API. Images are processed locally and are never sent to a server.</p>
+      </div>
+    </section>
 
-        <div class="canvas-container">
-            <div class="canvas-wrapper">
-                <h3>Original</h3>
-                <canvas id="originalCanvas"></canvas>
-            </div>
-            <div class="canvas-wrapper">
-                <h3>Modified</h3>
-                <canvas id="modifiedCanvas"></canvas>
-            </div>
-        </div>
+    <section class="community-card" aria-labelledby="community-title">
+      <div>
+        <div class="eyebrow">KEEP RECOLOR FREE</div>
+        <h2 id="community-title">Useful? Pass it on.</h2>
+        <p>Recommend Recolor to a friend, share it with your network, or join the project on GitHub. No account or payment required.</p>
+      </div>
+      <div class="community-actions">
+        <button class="community-button primary-share" id="shareButton" type="button">Recommend to a friend ↗</button>
+        <a class="community-button" id="xShareLink" href="#" target="_blank" rel="noopener noreferrer">Share on X</a>
+        <a class="community-button" href="https://github.com/ol-s-cloud/color-changer-tool" target="_blank" rel="noopener noreferrer">Star / join on GitHub ↗</a>
+      </div>
+      <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
+    </section>
+  </main>
 
-        <a id="downloadLink" style="display: none;">💾 Download Modified Image</a>
+  <footer>
+    <div class="footer-brand">
+      <span>Recolor</span>
+      <small>Free browser utility for designers, founders and everyone else.</small>
     </div>
+    <div class="footer-credit">
+      <span>An open-source utility by <a href="https://github.com/ol-s-cloud" target="_blank" rel="noopener noreferrer">ol-s-cloud</a>.</span>
+      <span>Built to stay simple, private and free.</span>
+    </div>
+  </footer>
 
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

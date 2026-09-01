@@ -1,76 +1,36 @@
-# PNG Color Changer Tool
+# Recolor
 
-A web-based tool for changing colors in PNG images instantly with drag & drop functionality.
+A free, privacy-first browser tool for recoloring PNG, JPG and WebP images.
 
-![Color Changer Demo](https://img.shields.io/badge/demo-live-brightgreen)
+## What it does
 
-## Features
+- Drag-and-drop image upload
+- Click any pixel to select the source color
+- Automatically surfaces common detected colors
+- Replace colors with adjustable matching tolerance
+- Live side-by-side original/result preview
+- Quick color presets
+- Export the result as PNG
+- Responsive interface for desktop and mobile
 
-- 🖼️ **Drag & Drop Upload** - Simply drag your PNG files into the browser
-- 🎨 **Real-time Color Replacement** - See changes instantly
-- 🔧 **Preset Color Combinations** - Quick access to common color schemes
-- 👀 **Side-by-Side Comparison** - View original and modified images together
-- 💾 **Instant Download** - Download your modified PNG immediately
-- 🎯 **Tolerance Control** - Intelligent color matching with adjustable precision
+## Privacy
 
-## Quick Start
+Recolor runs entirely in the browser with the HTML Canvas API. Images are processed locally and are never uploaded to a server.
 
-1. Open `index.html` in your web browser
-2. Upload your PNG image via drag & drop or file selection
-3. Choose colors using presets or manual color pickers
-4. Click "Change Colors" to apply transformation
-5. Download your modified image
+## Stack
 
-## Color Presets
+Pure HTML, CSS and JavaScript. No backend, database, authentication or build step is required.
 
-- **White & Dark Blue-Green** (#FFFFFF & #13493f)
-- **Black & White** (#000000 & #FFFFFF)
-- **Dark Blue-Green & White** (#13493f & #FFFFFF)
+## Deploy
 
-## Usage Examples
+The repository can be deployed directly as a static site on Vercel. Connect the GitHub repository, select the repository root, and deploy without a framework preset or build command.
 
-### Logo Recoloring
-Perfect for quickly changing logo colors for different brand variations or themes.
+## Product positioning
 
-### Icon Customization
-Easily adapt icons to match your design system's color palette.
+**Recolor — Change any PNG color in seconds.**
 
-### Batch Processing
-Quickly process multiple images with consistent color schemes.
+Free · Private · No sign-up
 
-## Browser Compatibility
+## Future ideas
 
-Works in all modern browsers that support HTML5 Canvas API:
-- Chrome 4+
-- Firefox 4+
-- Safari 3.1+
-- Edge 12+
-
-## Technical Details
-
-- **No Server Required** - Runs entirely in the browser
-- **Privacy Focused** - Images never leave your device
-- **Lightweight** - Pure HTML, CSS, and JavaScript
-- **Responsive Design** - Works on desktop and mobile devices
-
-## File Structure
-
-```
-color-changer-tool/
-├── index.html      # Main application file
-├── styles.css      # Complete styling
-├── script.js       # Core functionality
-└── README.md       # This documentation
-```
-
-## Contributing
-
-Feel free to submit issues, fork the repository, and create pull requests for any improvements.
-
-## License
-
-Open source - feel free to use and modify for your projects!
-
----
-
-**Made with ❤️ for easy image color manipulation**
+The v1 intentionally stays focused. Possible follow-ons include bulk recoloring, SVG editing, background removal, image compression, resizing, palette extraction and dedicated SEO landing pages.
