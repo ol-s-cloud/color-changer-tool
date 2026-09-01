@@ -16,6 +16,9 @@ const sampleState = document.getElementById('sampleState');
 const detectedWrap = document.getElementById('detectedWrap');
 const detectedColors = document.getElementById('detectedColors');
 const downloadLink = document.getElementById('downloadLink');
+const shareButton = document.getElementById('shareButton');
+const xShareLink = document.getElementById('xShareLink');
+const shareStatus = document.getElementById('shareStatus');
 
 let originalImageData = null;
 let originalFileName = 'image.png';
@@ -76,6 +79,48 @@ originalCanvas.addEventListener('click', (event) => {
   toggleSampleMode(false);
   processImage(false);
 });
+
+if (xShareLink) {
+  const text = 'Try Recolor — a free, private image color changer that works entirely in your browser.';
+  xShareLink.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`;
+}
+
+if (shareButton) {
+  shareButton.addEventListener('click', shareRecolor);
+}
+
+async function shareRecolor() {
+  const shareData = {
+    title: 'Recolor — Free Image Color Changer',
+    text: 'Try Recolor — change image and logo colors instantly. Free, private and browser-based.',
+    url: window.location.href
+  };
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      setShareStatus('Thanks for sharing Recolor.');
+      return;
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+    setShareStatus('Link copied — send it to a friend.');
+  } catch {
+    window.prompt('Copy this link to share Recolor:', shareData.url);
+  }
+}
+
+function setShareStatus(message) {
+  if (!shareStatus) return;
+  shareStatus.textContent = message;
+  window.setTimeout(() => {
+    shareStatus.textContent = '';
+  }, 4000);
+}
 
 function handleFile(file) {
   if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
