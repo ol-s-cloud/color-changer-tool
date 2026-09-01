@@ -1,152 +1,259 @@
-// Global variables
-let originalImageData = null;
-let originalCanvas = document.getElementById('originalCanvas');
-let modifiedCanvas = document.getElementById('modifiedCanvas');
-let originalCtx = originalCanvas.getContext('2d');
-let modifiedCtx = modifiedCanvas.getContext('2d');
-
-// File upload handling
+const originalCanvas = document.getElementById('originalCanvas');
+const modifiedCanvas = document.getElementById('modifiedCanvas');
+const originalCtx = originalCanvas.getContext('2d', { willReadFrequently: true });
+const modifiedCtx = modifiedCanvas.getContext('2d', { willReadFrequently: true });
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
+const workspace = document.getElementById('workspace');
+const fromColor = document.getElementById('fromColor');
+const fromColorHex = document.getElementById('fromColorHex');
+const toColor = document.getElementById('toColor');
+const toColorHex = document.getElementById('toColorHex');
+const tolerance = document.getElementById('tolerance');
+const toleranceValue = document.getElementById('toleranceValue');
+const sampleModeButton = document.getElementById('sampleModeButton');
+const sampleState = document.getElementById('sampleState');
+const detectedWrap = document.getElementById('detectedWrap');
+const detectedColors = document.getElementById('detectedColors');
+const downloadLink = document.getElementById('downloadLink');
+
+let originalImageData = null;
+let originalFileName = 'image.png';
+let sampleMode = false;
+let activeObjectUrl = null;
 
 uploadArea.addEventListener('click', () => fileInput.click());
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
+uploadArea.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') fileInput.click();
 });
-uploadArea.addEventListener('dragleave', () => {
-    uploadArea.classList.remove('dragover');
+uploadArea.addEventListener('dragover', (event) => {
+  event.preventDefault();
+  uploadArea.classList.add('dragover');
 });
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-        handleFile(files[0]);
-    }
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', (event) => {
+  event.preventDefault();
+  uploadArea.classList.remove('dragover');
+  const file = event.dataTransfer.files?.[0];
+  if (file) handleFile(file);
 });
-
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length > 0) {
-        handleFile(e.target.files[0]);
-    }
+fileInput.addEventListener('change', (event) => {
+  const file = event.target.files?.[0];
+  if (file) handleFile(file);
 });
 
-// Color input synchronization
-document.getElementById('fromColor').addEventListener('change', (e) => {
-    document.getElementById('fromColorHex').value = e.target.value;
+document.getElementById('replaceImageButton').addEventListener('click', () => fileInput.click());
+document.getElementById('changeButton').addEventListener('click', processImage);
+document.getElementById('resetButton').addEventListener('click', resetImage);
+sampleModeButton.addEventListener('click', toggleSampleMode);
+
+tolerance.addEventListener('input', () => {
+  toleranceValue.textContent = tolerance.value;
+  if (originalImageData) processImage(false);
 });
-document.getElementById('fromColorHex').addEventListener('change', (e) => {
-    document.getElementById('fromColor').value = e.target.value;
+
+bindColorPair(fromColor, fromColorHex, () => originalImageData && processImage(false));
+bindColorPair(toColor, toColorHex, () => originalImageData && processImage(false));
+
+document.querySelectorAll('.preset').forEach((button) => {
+  button.addEventListener('click', () => {
+    setColor(fromColor, fromColorHex, button.dataset.from);
+    setColor(toColor, toColorHex, button.dataset.to);
+    if (originalImageData) processImage(false);
+  });
 });
-document.getElementById('toColor').addEventListener('change', (e) => {
-    document.getElementById('toColorHex').value = e.target.value;
-});
-document.getElementById('toColorHex').addEventListener('change', (e) => {
-    document.getElementById('toColor').value = e.target.value;
+
+originalCanvas.addEventListener('click', (event) => {
+  if (!sampleMode || !originalImageData) return;
+  const rect = originalCanvas.getBoundingClientRect();
+  const scaleX = originalCanvas.width / rect.width;
+  const scaleY = originalCanvas.height / rect.height;
+  const x = Math.max(0, Math.min(originalCanvas.width - 1, Math.floor((event.clientX - rect.left) * scaleX)));
+  const y = Math.max(0, Math.min(originalCanvas.height - 1, Math.floor((event.clientY - rect.top) * scaleY)));
+  const pixel = originalCtx.getImageData(x, y, 1, 1).data;
+  const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+  setColor(fromColor, fromColorHex, hex);
+  toggleSampleMode(false);
+  processImage(false);
 });
 
 function handleFile(file) {
-    if (!file.type.match('image.*')) {
-        alert('Please select an image file.');
-        return;
-    }
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+    alert('Please choose a PNG, JPG, or WebP image.');
+    return;
+  }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-            // Set canvas size
-            originalCanvas.width = img.width;
-            originalCanvas.height = img.height;
-            modifiedCanvas.width = img.width;
-            modifiedCanvas.height = img.height;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const img = new Image();
+    img.onload = () => {
+      originalCanvas.width = img.naturalWidth;
+      originalCanvas.height = img.naturalHeight;
+      modifiedCanvas.width = img.naturalWidth;
+      modifiedCanvas.height = img.naturalHeight;
 
-            // Draw original image
-            originalCtx.drawImage(img, 0, 0);
-            originalImageData = originalCtx.getImageData(0, 0, img.width, img.height);
-            
-            // Initialize modified canvas with original
-            modifiedCtx.drawImage(img, 0, 0);
-        };
-        img.src = e.target.result;
+      originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+      modifiedCtx.clearRect(0, 0, modifiedCanvas.width, modifiedCanvas.height);
+      originalCtx.drawImage(img, 0, 0);
+      modifiedCtx.drawImage(img, 0, 0);
+      originalImageData = originalCtx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+      originalFileName = file.name || 'image.png';
+
+      document.getElementById('fileName').textContent = originalFileName;
+      document.getElementById('fileMeta').textContent = `${img.naturalWidth} × ${img.naturalHeight} · ${formatBytes(file.size)}`;
+      uploadArea.hidden = true;
+      workspace.hidden = false;
+      downloadLink.hidden = true;
+      detectTopColors();
     };
-    reader.readAsDataURL(file);
+    img.src = event.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
-function hexToRgb(hex) {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
-}
+function processImage(showDownload = true) {
+  if (!originalImageData) return;
 
-function processImage() {
-    if (!originalImageData) {
-        alert('Please upload an image first.');
-        return;
+  const source = hexToRgb(fromColorHex.value);
+  const target = hexToRgb(toColorHex.value);
+  if (!source || !target) {
+    alert('Enter a valid hex color such as #13493F.');
+    return;
+  }
+
+  const imageData = new ImageData(new Uint8ClampedArray(originalImageData.data), originalImageData.width, originalImageData.height);
+  const data = imageData.data;
+  const threshold = Number(tolerance.value);
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] === 0) continue;
+    const distance = Math.sqrt(
+      Math.pow(data[i] - source.r, 2) +
+      Math.pow(data[i + 1] - source.g, 2) +
+      Math.pow(data[i + 2] - source.b, 2)
+    );
+
+    if (distance <= threshold) {
+      data[i] = target.r;
+      data[i + 1] = target.g;
+      data[i + 2] = target.b;
     }
+  }
 
-    const fromColor = hexToRgb(document.getElementById('fromColorHex').value);
-    const toColor = hexToRgb(document.getElementById('toColorHex').value);
-    
-    if (!fromColor || !toColor) {
-        alert('Invalid color values.');
-        return;
-    }
-
-    const imageData = originalCtx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
-    const data = imageData.data;
-
-    // Color replacement with tolerance
-    const tolerance = 50;
-    
-    for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-
-        // Check if pixel is close to the from color
-        const rDiff = Math.abs(r - fromColor.r);
-        const gDiff = Math.abs(g - fromColor.g);
-        const bDiff = Math.abs(b - fromColor.b);
-
-        if (rDiff <= tolerance && gDiff <= tolerance && bDiff <= tolerance && a > 0) {
-            data[i] = toColor.r;     // R
-            data[i + 1] = toColor.g; // G
-            data[i + 2] = toColor.b; // B
-            // Keep original alpha
-        }
-    }
-
-    modifiedCtx.putImageData(imageData, 0, 0);
-    
-    // Show download link
-    const downloadLink = document.getElementById('downloadLink');
-    modifiedCanvas.toBlob(function(blob) {
-        const url = URL.createObjectURL(blob);
-        downloadLink.href = url;
-        downloadLink.download = 'modified-image.png';
-        downloadLink.style.display = 'inline-block';
-    });
+  modifiedCtx.putImageData(imageData, 0, 0);
+  if (showDownload) prepareDownload();
 }
 
 function resetImage() {
-    if (originalImageData) {
-        modifiedCtx.putImageData(originalImageData, 0, 0);
-        document.getElementById('downloadLink').style.display = 'none';
+  if (!originalImageData) return;
+  modifiedCtx.putImageData(originalImageData, 0, 0);
+  downloadLink.hidden = true;
+}
+
+function prepareDownload() {
+  modifiedCanvas.toBlob((blob) => {
+    if (!blob) return;
+    if (activeObjectUrl) URL.revokeObjectURL(activeObjectUrl);
+    activeObjectUrl = URL.createObjectURL(blob);
+    downloadLink.href = activeObjectUrl;
+    downloadLink.download = `${stripExtension(originalFileName)}-recolored.png`;
+    downloadLink.hidden = false;
+  }, 'image/png');
+}
+
+function toggleSampleMode(force) {
+  sampleMode = typeof force === 'boolean' ? force : !sampleMode;
+  originalCanvas.classList.toggle('sample-mode', sampleMode);
+  sampleState.textContent = sampleMode ? 'CLICK A PIXEL' : '';
+  sampleModeButton.textContent = sampleMode ? 'Cancel color picker' : 'Pick from image';
+}
+
+function detectTopColors() {
+  const { data, width, height } = originalImageData;
+  const counts = new Map();
+  const totalPixels = width * height;
+  const step = Math.max(1, Math.floor(totalPixels / 35000));
+
+  for (let pixel = 0; pixel < totalPixels; pixel += step) {
+    const i = pixel * 4;
+    if (data[i + 3] < 40) continue;
+    const r = Math.round(data[i] / 32) * 32;
+    const g = Math.round(data[i + 1] / 32) * 32;
+    const b = Math.round(data[i + 2] / 32) * 32;
+    const key = `${Math.min(r, 255)},${Math.min(g, 255)},${Math.min(b, 255)}`;
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+
+  const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  detectedColors.innerHTML = '';
+  top.forEach(([key]) => {
+    const [r, g, b] = key.split(',').map(Number);
+    const hex = rgbToHex(r, g, b);
+    const button = document.createElement('button');
+    button.className = 'detected-color';
+    button.type = 'button';
+    button.style.backgroundColor = hex;
+    button.title = `Use ${hex}`;
+    button.setAttribute('aria-label', `Use detected color ${hex}`);
+    button.addEventListener('click', () => {
+      setColor(fromColor, fromColorHex, hex);
+      processImage(false);
+    });
+    detectedColors.appendChild(button);
+  });
+  detectedWrap.hidden = top.length === 0;
+}
+
+function bindColorPair(colorInput, textInput, onChange) {
+  colorInput.addEventListener('input', () => {
+    textInput.value = colorInput.value.toUpperCase();
+    onChange?.();
+  });
+  textInput.addEventListener('change', () => {
+    const normalized = normalizeHex(textInput.value);
+    if (!normalized) {
+      textInput.value = colorInput.value.toUpperCase();
+      return;
     }
+    setColor(colorInput, textInput, normalized);
+    onChange?.();
+  });
 }
 
-function setColors(fromColor, toColor) {
-    document.getElementById('fromColor').value = fromColor;
-    document.getElementById('fromColorHex').value = fromColor;
-    document.getElementById('toColor').value = toColor;
-    document.getElementById('toColorHex').value = toColor;
+function setColor(colorInput, textInput, value) {
+  const normalized = normalizeHex(value);
+  if (!normalized) return;
+  colorInput.value = normalized;
+  textInput.value = normalized.toUpperCase();
 }
 
-// Initialize with default colors
-setColors('#000000', '#13493f');
+function normalizeHex(value) {
+  const clean = String(value).trim();
+  const withHash = clean.startsWith('#') ? clean : `#${clean}`;
+  return /^#[0-9a-fA-F]{6}$/.test(withHash) ? withHash.toLowerCase() : null;
+}
+
+function hexToRgb(hex) {
+  const valid = normalizeHex(hex);
+  if (!valid) return null;
+  return {
+    r: parseInt(valid.slice(1, 3), 16),
+    g: parseInt(valid.slice(3, 5), 16),
+    b: parseInt(valid.slice(5, 7), 16)
+  };
+}
+
+function rgbToHex(r, g, b) {
+  return `#${[r, g, b].map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0')).join('')}`.toUpperCase();
+}
+
+function stripExtension(name) {
+  return name.replace(/\.[^/.]+$/, '') || 'image';
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes === 0) return '0 KB';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  return `${(bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
