@@ -17,18 +17,22 @@
       <span class="brand-mark"></span>
       <span>Recolor</span>
     </a>
-    <div class="header-note">Free · Private · No sign-up</div>
+    <nav class="header-actions" aria-label="Primary navigation">
+      <a href="#how-it-works">How it works</a>
+      <a href="https://github.com/ol-s-cloud/color-changer-tool" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
+    </nav>
   </header>
 
   <main>
     <section class="hero">
-      <div class="eyebrow">BROWSER-BASED IMAGE TOOL</div>
+      <div class="eyebrow">FREE · PRIVATE · NO SIGN-UP</div>
       <h1>Change any PNG color<br><span>in seconds.</span></h1>
       <p class="hero-copy">Upload an image, pick the color you want to replace, choose a new one and download. Your image never leaves your device.</p>
       <div class="trust-row">
         <span>✓ 100% free</span>
         <span>✓ No uploads</span>
         <span>✓ Instant download</span>
+        <span>✓ Open source</span>
       </div>
     </section>
 
@@ -36,8 +40,8 @@
       <div class="upload-area" id="uploadArea" role="button" tabindex="0" aria-label="Upload image">
         <div class="upload-icon">↥</div>
         <div>
-          <strong>Drop your PNG here</strong>
-          <span>or click to choose an image</span>
+          <strong>Drop your image here</strong>
+          <span>PNG, JPG or WebP · or click to choose</span>
         </div>
         <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
       </div>
@@ -100,19 +104,15 @@
               <span class="preview-label">RESULT</span>
             </div>
             <div class="canvas-grid">
-              <div class="canvas-card">
-                <canvas id="originalCanvas" title="Original image"></canvas>
-              </div>
-              <div class="canvas-card">
-                <canvas id="modifiedCanvas" title="Modified image"></canvas>
-              </div>
+              <div class="canvas-card"><canvas id="originalCanvas" title="Original image"></canvas></div>
+              <div class="canvas-card"><canvas id="modifiedCanvas" title="Modified image"></canvas></div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="how-it-works">
+    <section class="how-it-works" id="how-it-works">
       <div class="section-heading">
         <div class="eyebrow">HOW IT WORKS</div>
         <h2>Three steps. Nothing uploaded.</h2>
@@ -131,11 +131,31 @@
         <p>Recolor works entirely inside your browser using the Canvas API. Images are processed locally and are never sent to a server.</p>
       </div>
     </section>
+
+    <section class="community-card" aria-labelledby="community-title">
+      <div>
+        <div class="eyebrow">KEEP RECOLOR FREE</div>
+        <h2 id="community-title">Useful? Pass it on.</h2>
+        <p>Recommend Recolor to a friend, share it with your network, or join the project on GitHub. No account or payment required.</p>
+      </div>
+      <div class="community-actions">
+        <button class="community-button primary-share" id="shareButton" type="button">Recommend to a friend ↗</button>
+        <a class="community-button" id="xShareLink" href="#" target="_blank" rel="noopener noreferrer">Share on X</a>
+        <a class="community-button" href="https://github.com/ol-s-cloud/color-changer-tool" target="_blank" rel="noopener noreferrer">Star / join on GitHub ↗</a>
+      </div>
+      <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
+    </section>
   </main>
 
   <footer>
-    <span>Recolor</span>
-    <span>Free browser utility for designers, founders and everyone else.</span>
+    <div class="footer-brand">
+      <span>Recolor</span>
+      <small>Free browser utility for designers, founders and everyone else.</small>
+    </div>
+    <div class="footer-credit">
+      <span>An open-source utility by <a href="https://github.com/ol-s-cloud" target="_blank" rel="noopener noreferrer">ol-s-cloud</a>.</span>
+      <span>Built to stay simple, private and free.</span>
+    </div>
   </footer>
 
   <script src="script.js"></script>
